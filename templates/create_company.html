@@ -53,7 +53,7 @@
             {% endfor %}
         </div>
         <div class="mb-3">
-            <label for="date_founded">Date Founded</label>
+            <label for="date_founded">Asutamiskuupäev</label>
             <input type="date" class="form-control" id="date_founded" name="date_founded" max="{{ current_date }}" required>
         </div>
         <div class="mb-3">
@@ -93,7 +93,7 @@
                 <button type="button" class="btn-close position-absolute top-0 end-0 m-2 remove-owner-btn" onclick="removeOwner(this)" aria-label="Remove"></button>
         
                 <div class="mb-2">
-                    <label>Owner Type</label>
+                    <label>Osaniku tüüp</label>
                     <select class="form-control owner-type" name="new_owner_type[]" onchange="toggleOwnerFields(this)">
                         <option value="person">Füüsiline isik</option>
                         <option value="legal_entity">Juriidiline isik</option>
