@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Osaühingu asutamine</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Osaühingu asutamine</h1>
+        <a href="{{ url_for('home') }}" class="btn btn-secondary">🏠 Home</a>
+    </div>
+    {% if error %}
+    <p class=error><strong>Error:</strong> {{ error }}
+    {% endif %}
+    <h5 class="mt-4">Otsi andmebaasist isikuid</h5>
+    <form method="get" action="{{ url_for('create_company') }}">
+        <input type="text" name="q" class="form-control mb-2" placeholder="Sisesta osaniku nimi..." value="{{ request.args.get('q', '') }}">
+        <button type="submit" class="btn btn-sm btn-primary">Otsi</button>
+    </form>
+    {% if search_results %}
+        <ul class="list-group mb-3">
+        {% for owner in search_results %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {% if owner.type == 'person' %}
+                    {{ owner.name }} {{ owner.surname }} (ID: {{ owner.id_number }})
+                {% else %}
+                    {{ owner.name }} (Registrikood: {{ owner.register_number }})
+                {% endif %}
+                <a href="{{ url_for('add_owner', owner_id=owner.id) }}" class="btn btn-sm btn-success">Add</a>
+            </li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+
+    <form method="post">
+        {{ form.hidden_tag() }}
+
+        <!-- Company fields -->
+        <div class="mb-3">
+            {{ form.name.label(class="form-label") }}
+            {{ form.name(class="form-control") }}
+            {% for error in form.name.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="mb-3">
+            {{ form.register_number.label(class="form-label") }}
+            {{ form.register_number(class="form-control") }}
+            {% for error in form.register_number.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="mb-3">
+            <label for="date_founded">Date Founded</label>
+            <input type="date" class="form-control" id="date_founded" name="date_founded" max="{{ current_date }}" required>
+        </div>
+        <div class="mb-3">
+            {{ form.capital_size.label(class="form-label") }}
+            {{ form.capital_size(class="form-control") }}
+            {% for error in form.capital_size.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+       
+
+        <h5 class="mt-4">Valitud osanikud andmebaasist</h5>
+
+        <ul class="list-group mb-3">
+            {% for owner in selected_owners %}
+                <li class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            {{ owner.name }} {% if owner.surname %}{{ owner.surname }}{% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control" name="share_amount_owner_{{ owner.id }}" placeholder="Osaniku osa suurus eurodes" min="1" >
+                        </div>
+                        <div class="col-md-1">
+                            <a href="{{ url_for('remove_owner', owner_id=owner.id) }}" class="btn btn-sm btn-danger">✕</a>
+                        </div>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+        
+
+        <h5 class="mt-4">Lisa uus osanik</h5>
+        <div id="new-owners-container">
+        
+            <div class="new-owner border rounded p-3 mb-3 position-relative">
+                <button type="button" class="btn-close position-absolute top-0 end-0 m-2 remove-owner-btn" onclick="removeOwner(this)" aria-label="Remove"></button>
+        
+                <div class="mb-2">
+                    <label>Owner Type</label>
+                    <select class="form-control owner-type" name="new_owner_type[]" onchange="toggleOwnerFields(this)">
+                        <option value="person">Füüsiline isik</option>
+                        <option value="legal_entity">Juriidiline isik</option>
+                    </select>
+                </div>
+        
+                <div class="mb-2">
+                    <label>Nimi</label>
+                    <input type="text" class="form-control" name="new_owner_name[]" >
+                </div>
+        
+                <div class="mb-2 person-only">
+                    <label>Perenimi</label>
+                    <input type="text" class="form-control" name="new_owner_surname[]" >
+                </div>
+        
+                <div class="mb-2 person-only">
+                    <label>Isikukood</label>
+                    <input type="text" class="form-control" name="new_owner_id_number[]" >
+                </div>
+        
+                <div class="mb-2 legal-only d-none">
+                    <label>Registrikood</label>
+                    <input type="text" class="form-control" name="new_owner_register_number[]" >
+                </div>
+        
+                <div class="mb-2">
+                    <label>Osaniku osa suurus eurodes</label>
+                    <input type="number" class="form-control" name="new_owner_share_amount[]" min="1" >
+                </div>
+            </div>
+        
+        </div>
+        
+        <button type="button" class="btn btn-outline-primary mb-3" onclick="addNewOwner()">➕ Lisa osanik</button>
+        
+
+
+        <div class="mb-3">{{ form.submit(class="btn btn-success") }}</div>
+    </form>
+</div>
+
+<script>
+    function toggleOwnerFields(selectEl) {
+        const ownerBlock = selectEl.closest('.new-owner');
+        const isPerson = selectEl.value === 'person';
+    
+        ownerBlock.querySelectorAll('.person-only').forEach(el => {
+            el.classList.toggle('d-none', !isPerson);
+        });
+        ownerBlock.querySelectorAll('.legal-only').forEach(el => {
+            el.classList.toggle('d-none', isPerson);
+        });
+    }
+    
+    function addNewOwner() {
+        const container = document.getElementById('new-owners-container');
+        const original = container.querySelector('.new-owner');
+        const clone = original.cloneNode(true);
+    
+        clone.querySelectorAll('input').forEach(input => input.value = '');
+        const select = clone.querySelector('select.owner-type');
+        select.value = 'person';
+        toggleOwnerFields(select);
+    
+        container.appendChild(clone);
+    }
+    
+    function removeOwner(button) {
+        const ownerBlock = button.closest('.new-owner');
+        const container = document.getElementById('new-owners-container');
+    
+        container.removeChild(ownerBlock);
+    }
+    </script>
+    
+    
+</body>
+</html>

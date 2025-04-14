@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ company.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Osaühingu andmete vaade</h1>
+        <a href="{{ url_for('home') }}" class="btn btn-secondary">🏠 Avaleht</a>
+    </div>
+    <p><strong>Osaühingu nimi:</strong> {{ company.name }}</p>
+    <p><strong>Registrikood:</strong> {{ company.register_number }}</p>
+    <p><strong>Asutamiskuupäev:</strong> {{ company.date_founded.strftime('%d-%m-%Y')  }}</p>
+    <p><strong>Kogukapitali suurus:</strong> {{ company.capital_size }} €</p>
+
+    <h4 class="mt-4">Osanikud</h4>
+    {% if company.company_owners %}
+        <ul class="list-group">
+        {% for company_owner in company.company_owners %}
+            <li class="list-group-item">
+                {% if company_owner.owner.type == 'person' %}
+                    👤 {{ company_owner.owner.name }} {{ company_owner.owner.surname or "" }} 
+                    (Isikukood: {{ company_owner.owner.id_number }})
+                {% else %}
+                    🏢 {{ company_owner.owner.name }} 
+                    (Registrikood: {{ company_owner.owner.register_number }})
+                {% endif %}
+                {% if company_owner.role == 'founder' %}
+                <span class="badge bg-success ms-2">Asutaja</span>
+                {% endif %}
+                <span class="float-end">Osaniku osa suurus: {{ company_owner.share_amount }} €</span>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>Osanike ei leidu.</p>
+    {% endif %}
+</div>
+</body>
+</html>

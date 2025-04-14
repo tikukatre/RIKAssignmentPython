@@ -1,0 +1,27 @@
+# Byte-compiled / compiled files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Virtual environment
+venv/
+.env/
+.env
+
+# SQLite database
+*.db
+instance/
+
+# Logs
+*.log
+
+# IDEs
+.vscode/
+.idea/
+
+# Python environment config
+*.egg-info/
+dist/
+build/
